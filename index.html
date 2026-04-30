@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playground Pintar - Belajar & Bermain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: #f0f9ff;
+            user-select: none;
+            overflow-x: hidden;
+        }
+        .card-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            transition: all 0.3s ease;
+        }
+        .card-gradient:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        .animate-pop {
+            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex flex-col items-center">
+
+    <!-- Header -->
+    <header id="main-header" class="text-center mb-8 animate-pop">
+        <h1 class="text-4xl md:text-5xl font-bold text-indigo-600 mb-2">Playground Pintar 🌟</h1>
+        <p class="text-gray-500 text-lg italic">Belajar jadi lebih seru dan menyenangkan!</p>
+    </header>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 w-full max-w-6xl">
+        <!-- Game Cards will be injected here -->
+    </div>
+
+    <!-- Game View (Hidden by default) -->
+    <div id="game-container" class="hidden w-full max-w-4xl bg-white rounded-3xl shadow-xl p-6 md:p-10 relative animate-pop mt-4">
+        <button onclick="backToDashboard()" class="absolute top-4 left-4 bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-full font-bold transition">
+            ← Menu Utama
+        </button>
+        <div id="game-content" class="mt-8 flex flex-col items-center min-h-[400px] justify-center">
+            <!-- Specific game content here -->
+        </div>
+    </div>
+
+    <script>
+        const games = [
+            { id: 'warna', title: 'Belajar Warna', icon: '🎨', color: 'bg-red-100' },
+            { id: 'abjad', title: 'Abjad A-Z', icon: '🅰️', color: 'bg-blue-100' },
+            { id: 'angka', title: 'Angka 1-10', icon: '🔟', color: 'bg-green-100' },
+            { id: 'hijaiyah', title: 'Hijaiyah', icon: '🌙', color: 'bg-emerald-100' },
+            { id: 'kalimat', title: 'Susun Kalimat', icon: '📝', color: 'bg-yellow-100' },
+            { id: 'membaca', title: 'Ayo Membaca', icon: '📖', color: 'bg-purple-100' },
+            { id: 'hitung', title: 'Mari Berhitung', icon: '🧮', color: 'bg-pink-100' },
+            { id: 'bintang', title: 'Tangkap Bintang', icon: '⭐', color: 'bg-orange-100' },
+            { id: 'balon', title: 'Pecahkan Balon', icon: '🎈', color: 'bg-cyan-100' },
+            { id: 'bentuk', title: 'Cari Pasangan', icon: '🧩', color: 'bg-indigo-100' }
+        ];
+
+        const dashboard = document.getElementById('dashboard');
+        const gameContainer = document.getElementById('game-container');
+        const gameContent = document.getElementById('game-content');
+        const mainHeader = document.getElementById('main-header');
+
+        function initDashboard() {
+            dashboard.innerHTML = '';
+            games.forEach(game => {
+                const card = document.createElement('div');
+                card.className = `${game.color} card-gradient p-6 rounded-2xl flex flex-col items-center justify-center cursor-pointer border-b-4 border-black/10`;
+                card.onclick = () => loadGame(game.id);
+                card.innerHTML = `
+                    <span class="text-5xl mb-4 floating">${game.icon}</span>
+                    <span class="font-bold text-gray-700 text-center">${game.title}</span>
+                `;
+                dashboard.appendChild(card);
+            });
+        }
+
+        function backToDashboard() {
+            gameContainer.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+            mainHeader.classList.remove('hidden');
+            window.speechSynthesis.cancel(); // Stop talking when leaving
+        }
+
+        function loadGame(gameId) {
+            dashboard.classList.add('hidden');
+            mainHeader.classList.add('hidden');
+            gameContainer.classList.remove('hidden');
+            gameContent.innerHTML = '';
+
+            switch(gameId) {
+                case 'warna': gameWarna(); break;
+                case 'abjad': gameAbjad(); break;
+                case 'angka': gameAngka(); break;
+                case 'hijaiyah': gameHijaiyah(); break;
+                case 'kalimat': gameKalimat(); break;
+                case 'membaca': gameMembaca(); break;
+                case 'hitung': gameHitung(); break;
+                case 'bintang': gameBintang(); break;
+                case 'balon': gameBalon(); break;
+                case 'bentuk': gameBentuk(); break;
+            }
+        }
+
+        // --- GAME MODULES ---
+
+        function gameWarna() {
+            const data = [
+                { n: 'Merah', c: '#ef4444' }, { n: 'Biru', c: '#3b82f6' },
+                { n: 'Hijau', c: '#22c55e' }, { n: 'Kuning', c: '#eab308' },
+                { n: 'Oranye', c: '#f97316' }, { n: 'Ungu', c: '#a855f7' },
+                { n: 'Cokelat', c: '#78350f' }, { n: 'Hitam', c: '#000000' },
+                { n: 'Putih', c: '#ffffff' }
+            ];
+            
+            gameContent.innerHTML = `
+                <h2 class="text-3xl font-bold mb-4 text-gray-700">Klik Warnanya!</h2>
+                <div id="color-feedback" class="h-12 mb-6 text-2xl font-bold text-indigo-600 animate-pop"></div>
+                <div class="grid grid-cols-3 gap-6">
+                    ${data.map(item => `
+                        <div onclick="handleColorClick('${item.n}')" 
+                             class="w-20 h-20 md:w-28 md:h-28 rounded-2xl border-4 border-white shadow-xl cursor-pointer transform active:scale-90 transition-all duration-150" 
+                             style="background-color: ${item.c}">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            window.handleColorClick = (colorName) => {
+                document.getElementById('color-feedback').innerText = colorName;
+                speak(colorName);
+                // Simple animation re-trigger
+                const fb = document.getElementById('color-feedback');
+                fb.classList.remove('animate-pop');
+                void fb.offsetWidth; 
+                fb.classList.add('animate-pop');
+            };
+        }
+
+        function gameAbjad() {
+            let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+            gameContent.innerHTML = `
+                <h2 class="text-3xl font-bold mb-6 text-gray-700">Kenali Huruf</h2>
+                <div class="flex flex-wrap justify-center gap-3 overflow-y-auto max-h-[400px] p-4">
+                    ${letters.map(l => `
+                        <div onclick="speak('${l}')" class="w-14 h-14 bg-blue-500 text-white flex items-center justify-center text-2xl font-bold rounded-xl shadow-md cursor-pointer hover:bg-blue-600 transition active:scale-90">
+                            ${l}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function gameAngka() {
+            gameContent.innerHTML = `
+                <h2 class="text-3xl font-bold mb-8 text-gray-700">Ayo Berhitung</h2>
+                <div class="grid grid-cols-5 gap-4">
+                    ${[1,2,3,4,5,6,7,8,9,10].map(n => `
+                        <div onclick="speak('${n}')" class="w-14 h-14 bg-green-500 text-white flex items-center justify-center text-2xl font-bold rounded-full shadow-md cursor-pointer hover:bg-green-600 transition active:scale-90">
+                            ${n}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function gameHijaiyah() {
+            const h = ["ا", "ب", "ت", "ث", "ج", "ح", "خ", "د", "ذ", "ر", "ز", "س", "ش", "ص", "ض", "ط", "ظ", "ع", "غ", "ف", "ق", "ك", "ل", "م", "ن", "و", "ه", "لا", "ء", "ي"];
+            const names = ["Alif", "Ba", "Ta", "Tsa", "Jim", "Ha", "Kho", "Dal", "Dzal", "Ro", "Zai", "Sin", "Syin", "Shod", "Dhod", "Tho", "Zho", "Ain", "Ghoin", "Fa", "Qof", "Kaf", "Lam", "Mim", "Nun", "Wawu", "Ha", "Lam Alif", "Hamzah", "Ya"];
+            gameContent.innerHTML = `
+                <h2 class="text-3xl font-bold mb-6 text-gray-700">Huruf Hijaiyah</h2>
+                <div class="flex flex-wrap justify-center gap-3 max-h-[400px] overflow-y-auto p-4" dir="rtl">
+                    ${h.map((char, i) => `
+                        <div onclick="speak('${names[i]}')" class="w-16 h-16 bg-emerald-500 text-white flex items-center justify-center text-3xl font-bold rounded-2xl shadow-md cursor-pointer hover:bg-emerald-600 transition active:scale-90">
+                            ${char}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function gameKalimat() {
+            const sentences = [
+                { words: ["Saya", "Suka", "Makan"], full: "Saya Suka Makan" },
+                { words: ["Ibu", "Masak", "Nasi"], full: "Ibu Masak Nasi" },
+                { words: ["Budi", "Main", "Bola"], full: "Budi Main Bola" }
+            ];
+            let current = sentences[Math.floor(Math.random() * sentences.length)];
+            let shuffled = [...current.words].sort(() => Math.random() - 0.5);
+            let userSelection = [];
+
+            const render = () => {
+                gameContent.innerHTML = `
+                    <h2 class="text-3xl font-bold mb-4 text-gray-700">Susun Kalimat</h2>
+                    <div class="flex flex-wrap gap-4 mb-8 min-h-[60px] border-b-2 border-dashed border-gray-300 w-full justify-center p-2">
+                        ${userSelection.map(w => `<span class="px-4 py-2 bg-yellow-400 text-white rounded-lg font-bold animate-pop">${w}</span>`).join('')}
+                    </div>
+                    <div class="flex flex-wrap gap-4 justify-center">
+                        ${shuffled.map((w, i) => `
+                            <button onclick="selectWord('${w}', ${i})" id="btn-${i}" class="px-6 py-3 bg-white border-2 border-yellow-400 text-yellow-600 rounded-xl font-bold hover:bg-yellow-50 transition active:scale-95">
+                                ${w}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <button onclick="gameKalimat()" class="mt-10 text-gray-400 text-sm underline">Reset Kalimat</button>
+                `;
+            };
+
+            window.selectWord = (word, index) => {
+                userSelection.push(word);
+                speak(word);
+                shuffled.splice(index, 1);
+                if (shuffled.length === 0) {
+                    if (userSelection.join(' ') === current.full) {
+                        setTimeout(() => {
+                            speak("Hebat, kamu pintar!");
+                            gameContent.innerHTML = `<h2 class="text-6xl animate-pop text-yellow-500 font-bold">✨ Hebat! ✨</h2>`;
+                            setTimeout(gameKalimat, 2000);
+                        }, 500);
+                    } else {
+                        speak("Coba lagi ya");
+                        setTimeout(gameKalimat, 1000);
+                    }
+                }
+                render();
+            };
+            render();
+        }
+
+        function gameMembaca() {
+            const words = [
+                { segments: ["Bo", "la"], full: "Bola" },
+                { segments: ["Bu", "ku"], full: "Buku" },
+                { segments: ["Ma", "ma"], full: "Mama" },
+                { segments: ["Pa", "pa"], full: "Papa" },
+                { segments: ["Ro", "ti"], full: "Roti" }
+            ];
+            let item = words[Math.floor(Math.random() * words.length)];
+            gameContent.innerHTML = `
+                <h2 class="text-3xl font-bold mb-10 text-gray-700">Mari Mengeja</h2>
+                <div class="flex gap-4 mb-8">
+                    ${item.segments.map(s => `
+                        <div onclick="speak('${s}')" class="px-8 py-6 bg-purple-500 text-white text-4xl font-bold rounded-2xl cursor-pointer hover:bg-purple-600 transition shadow-lg active:scale-95">
+                            ${s}
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="text-5xl font-bold text-gray-200 tracking-widest mt-4">?</div>
+                <button onclick="gameMembaca()" class="mt-10 bg-gray-100 px-6 py-2 rounded-full text-gray-500">Ganti Kata</button>
+            `;
+        }
+
+        function gameHitung() {
+            let a = Math.floor(Math.random() * 5) + 1;
+            let b = Math.floor(Math.random() * 4) + 1;
+            let res = a + b;
+            let options = Array.from(new Set([res, res+1, res-1, res+2])).slice(0,3).sort(() => Math.random() - 0.5);
+
+            gameContent.innerHTML = `
+                <h2 class="text-3xl font-bold mb-8 text-gray-700">Penjumlahan</h2>
+                <div class="flex flex-wrap justify-center items-center gap-4 text-4xl font-bold text-pink-600 mb-8">
+                    <div class="flex flex-col items-center">
+                        <div class="text-xl mb-2">${"🍎".repeat(a)}</div>
+                        <span>${a}</span>
+                    </div>
+                    <span>+</span>
+                    <div class="flex flex-col items-center">
+                        <div class="text-xl mb-2">${"🍎".repeat(b)}</div>
+                        <span>${b}</span>
+                    </div>
+                    <span>=</span>
+                    <span class="text-gray-300">?</span>
+                </div>
+                <div class="flex gap-4">
+                    ${options.map(opt => `
+                        <button onclick="checkHitung(${opt}, ${res})" class="w-20 h-20 bg-white border-4 border-pink-400 rounded-2xl text-3xl font-bold text-pink-500 hover:bg-pink-50 transition active:scale-90 shadow-md">
+                            ${opt}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        window.checkHitung = (val, res) => {
+            if (val === res) {
+                speak("Hore, benar!");
+                gameContent.innerHTML = `<h2 class="text-6xl animate-pop text-pink-500 font-bold">🌟 Benar! 🌟</h2>`;
+                setTimeout(gameHitung, 1500);
+            } else {
+                speak("Salah, coba hitung lagi");
+            }
+        };
+
+        function gameBintang() {
+            gameContent.innerHTML = `
+                <h2 class="text-3xl font-bold mb-2 text-gray-700">Tangkap Bintang</h2>
+                <p class="text-gray-400 mb-6">Sentuh bintangnya!</p>
+                <div id="game-area" class="relative w-full h-[300px] bg-slate-900 rounded-2xl overflow-hidden cursor-crosshair"></div>
+                <div id="score" class="mt-4 text-xl font-bold text-orange-500">Skor: 0</div>
+            `;
+            let score = 0;
+            const area = document.getElementById('game-area');
+            const scoreEl = document.getElementById('score');
+            
+            const spawn = () => {
+                if (!document.getElementById('game-area')) return;
+                const star = document.createElement('div');
+                star.className = 'absolute text-4xl cursor-pointer animate-pop select-none';
+                star.innerHTML = '⭐';
+                star.style.left = Math.random() * 85 + '%';
+                star.style.top = Math.random() * 80 + '%';
+                star.onclick = () => {
+                    score++;
+                    scoreEl.innerText = `Skor: ${score}`;
+                    speak("Ding!");
+                    star.remove();
+                };
+                area.appendChild(star);
+                setTimeout(() => star.remove(), 2000);
+            };
+            const interval = setInterval(spawn, 900);
+            const observer = new MutationObserver(() => {
+                if (!document.getElementById('game-area')) clearInterval(interval);
+            });
+            observer.observe(gameContent, { childList: true });
+        }
+
+        function gameBalon() {
+            gameContent.innerHTML = `
+                <h2 class="text-3xl font-bold mb-4 text-gray-700">Pecahkan Balon</h2>
+                <div id="balon-area" class="relative w-full h-[350px] bg-sky-50 rounded-2xl overflow-hidden flex justify-center items-end p-4"></div>
+            `;
+            const area = document.getElementById('balon-area');
+            const colors = ['#f87171', '#60a5fa', '#4ade80', '#fbbf24', '#a78bfa'];
+            
+            const createBalon = () => {
+                if (!area) return;
+                const b = document.createElement('div');
+                b.className = 'w-14 h-18 rounded-full mx-1 mb-[-120px] cursor-pointer absolute bottom-0 transition-all duration-[4000ms] linear';
+                b.style.left = Math.random() * 80 + 10 + '%';
+                b.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                b.innerHTML = '<div class="absolute bottom-[-15px] left-1/2 w-[1px] h-10 bg-gray-400"></div>';
+                
+                b.onclick = () => {
+                    speak("Pop!");
+                    b.style.transform = 'scale(1.5)';
+                    b.style.opacity = '0';
+                    setTimeout(() => b.remove(), 200);
+                };
+
+                area.appendChild(b);
+                setTimeout(() => { b.style.bottom = '120%'; }, 50);
+                setTimeout(() => b.remove(), 4500);
+            };
+
+            const interval = setInterval(createBalon, 1000);
+            const observer = new MutationObserver(() => {
+                if (!document.getElementById('balon-area')) clearInterval(interval);
+            });
+            observer.observe(gameContent, { childList: true });
+        }
+
+        function gameBentuk() {
+            const items = [
+                { char: '🔴', name: 'Lingkaran' },
+                { char: '🟦', name: 'Kotak' },
+                { char: '🔺', name: 'Segitiga' },
+                { char: '⭐', name: 'Bintang' }
+            ];
+            let target = items[Math.floor(Math.random() * items.length)];
+            
+            gameContent.innerHTML = `
+                <h2 class="text-3xl font-bold mb-8 text-gray-700 text-center">Mana yang <span class="text-indigo-600 underline">${target.name}</span>?</h2>
+                <div class="grid grid-cols-2 gap-6">
+                    ${items.map(item => `
+                        <div onclick="checkBentuk('${item.name}', '${target.name}')" class="text-6xl p-6 bg-white rounded-3xl cursor-pointer hover:bg-indigo-50 border-4 border-gray-100 active:border-indigo-400 transition-all shadow-sm">
+                            ${item.char}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            speak(`Mana yang ${target.name}?`);
+        }
+
+        window.checkBentuk = (selected, target) => {
+            if (selected === target) {
+                speak("Pintar, itu " + target);
+                setTimeout(gameBentuk, 1500);
+            } else {
+                speak("Bukan itu, coba lagi");
+            }
+        };
+
+        // Utility: Suara sederhana (Menggunakan Speech Synthesis)
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const msg = new SpeechSynthesisUtterance();
+                msg.text = text;
+                msg.lang = 'id-ID';
+                msg.rate = 1.0;
+                msg.pitch = 1.2; // Sedikit lebih tinggi agar terdengar ceria
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        // Initialize
+        initDashboard();
+    </script>
+</body>
+</html>
